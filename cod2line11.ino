@@ -6,9 +6,11 @@ const int m21Pin = 2;
 const int m22Pin = 4;
 const int m1Enable = 11;
 const int m2Enable = 10;
+const int leftLedPin = 9;
+const int rightLedPin = 5;
 
 // increase p’s value and see what happens
-float kp = 23 ;
+float kp = 23;
 float ki = 0;
 float kd = 10;
 
@@ -38,6 +40,8 @@ int RIGHT_SWEEP_TIME = 550;
 int CALIBRATE_SPEED = 250;
 int SWEEP_COUNT = 6;
 
+int MAX_LED_BRIGHT = 255;
+
 
 void setup() {
 
@@ -48,6 +52,8 @@ void setup() {
   pinMode(m22Pin, OUTPUT);
   pinMode(m1Enable, OUTPUT);
   pinMode(m2Enable, OUTPUT);
+  pinMode(leftLedPin, OUTPUT);
+  pinMode(rightLedPin, OUTPUT);
 
   qtr.setTypeAnalog();
   qtr.setSensorPins((const uint8_t[]){ A0, A1, A2, A3, A4, A5 }, sensorCount);
@@ -127,6 +133,11 @@ int pidControl(int error) {
   return kp * p + ki * i + kd * d;  // = error in this case
 }
 
+void updateBlinkers(int leftMotorSpeed, int rightMotorSpeed) {
+  analogWrite(leftLedPin, constrain(leftMotorSpeed, 0, MAX_LED_BRIGHT));
+  analogWrite(rightLedPin, constrain(rightMotorSpeed, 0, MAX_LED_BRIGHT));
+}
+
 void followLine() {
   // inefficient code, written in loop. You must create separate functions
   int error = map(qtr.readLineBlack(sensorValues), 0, 5000, -50, 50);
@@ -154,6 +165,7 @@ void followLine() {
 
 
   setMotorSpeed(m1Speed, m2Speed);
+  updateBlinkers(m1Speed, m2Speed);
 }
 
 void loop() {

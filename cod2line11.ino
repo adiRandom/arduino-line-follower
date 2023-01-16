@@ -1,32 +1,23 @@
 #include <QTRSensors.h>
+
 const int m11Pin = 7;
 const int m12Pin = 3;
-const int m21Pin = 5;
+const int m21Pin = 2;
 const int m22Pin = 4;
 const int m1Enable = 11;
 const int m2Enable = 10;
 
-int m1Speed = 0;
-int m2Speed = 0;
-
-
-// increase kp’s value and see what happens
-float kp = 16;
+// increase p’s value and see what happens
+float kp = 23 ;
 float ki = 0;
-float kd = 5;
+float kd = 10;
 
-
-int p = 1;
-int i = 0;
-int d = 0;
-
-int error = 0;
 int lastError = 0;
 
 const int maxSpeed = 255;
 const int minSpeed = -200;
 
-const int baseSpeed = 140;
+const int baseSpeed = 255;
 
 QTRSensors qtr;
 
@@ -64,13 +55,6 @@ void setup() {
   delay(500);
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH);  // turn on Arduino's LED to indicate we are in calibration mode
-
-  // // calibrate the sensor. For maximum grade the line follower should do the movement itself, without human interaction.
-  // for (uint16_t i = 0; i < 400; i++) {
-  //   qtr.calibrate();
-  //   // do motor movement here, with millis() as to not ruin calibration)
-  // }
-  digitalWrite(LED_BUILTIN, LOW);
 
   Serial.begin(9600);
 }
@@ -129,40 +113,27 @@ void calibrate() {
     return;
   }
 
+
+  digitalWrite(LED_BUILTIN, LOW);
   isCalibrated = true;
+}
 
-  // // Final half sweep from left to center
-  // if (startSweepTime == 0) {
-  //   goLeft(-CALIBRATE_SPEED);
-  //   qtr.calibrate();
-  //   startSweepTime = millis();
-  // } else {
-  //   if (millis() - startSweepTime > INITIAL_SWEEP_TIME) {
-  //     startSweepTime = 0;
-  //     stopMotor();
-  //     isCalibrated = true;
-  //   } else {
-  //   goLeft(-CALIBRATE_SPEED);
+int pidControl(int error) {
+  int p = error;
+  int i = i + error;
+  int d = error - lastError;
+  lastError = error;
 
-  //     qtr.calibrate();
-  //     return;
-  //   }
-  // }
+  return kp * p + ki * i + kd * d;  // = error in this case
 }
 
 void followLine() {
   // inefficient code, written in loop. You must create separate functions
   int error = map(qtr.readLineBlack(sensorValues), 0, 5000, -50, 50);
+  int motorSpeed = pidControl(error);
 
-  p = error;
-  i = i + error;
-  d = error - lastError;
-  lastError = error;
-
-  int motorSpeed = kp * p + ki * i + kd * d;  // = error in this case
-
-  m1Speed = baseSpeed;
-  m2Speed = baseSpeed;
+  int m1Speed = baseSpeed;
+  int m2Speed = baseSpeed;
 
   // a bit counter intuitive because of the signs
   // basically in the first if, you substract the error from m1Speed (you add the negative)
@@ -191,17 +162,6 @@ void loop() {
   } else {
     followLine();
   }
-
-  //  DEBUGGING
-  //  Serial.print("Error: ");
-  //  Serial.println(error);
-  //  Serial.print("M1 speed: ");
-  //  Serial.println(m1Speed);
-  //
-  //  Serial.print("M2 speed: ");
-  //  Serial.println(m2Speed);
-  //
-  //  delay(250);
 }
 
 void goLeft(int speed) {
@@ -249,10 +209,6 @@ void goRight(int speed) {
 
 // each arguments takes values between -255 and 255. The negative values represent the motor speed in reverse.
 void setMotorSpeed(int motor1Speed, int motor2Speed) {
-  // remove comment if any of the motors are going in reverse
-  // motor1Speed = -motor1Speed;
-  //  motor2Speed = -motor2Speed;
-
   goLeft(motor1Speed);
   goRight(motor2Speed);
 }

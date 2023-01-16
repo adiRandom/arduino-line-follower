@@ -42,6 +42,10 @@ We found the values of the constants that scaled the P and D by trial and error.
 
 ## Video 
 
+https://user-images.githubusercontent.com/38132701/212694729-f627b20d-f519-43d3-be9e-0817bb534eba.MOV
 
-https://user-images.githubusercontent.com/38132701/212675247-779ef3a6-4b43-4410-89d6-6d6842793395.MOV
+
+
+
+
 
